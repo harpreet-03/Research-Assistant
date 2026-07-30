@@ -4,12 +4,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from tools import web_search, scrape_url
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 llm = ChatMistralAI(
-    model="ministral-3-14b-latest",
-    temperature=0,
+    model="mistral-small-2506",
+    api_key=os.getenv("MISTRAL_API_KEY"),
+    temperature=0
 )
 
 # 1st agent
@@ -21,7 +23,7 @@ def build_search_agent():
 
 
 # 2nd agent
-def build_reader():
+def build_reader_agent():
     return create_agent(
         model=llm,
         tools=[scrape_url],
