@@ -48,5 +48,5 @@ def scrape_url(url: str) -> str:
         return f"Could not scrape URL: {str(e)}"
 
 
-# print(scrape_url.invoke("https://www.heizen.work/careers/software-engineer?utm_source=sp_auto_dm&utm_referrer=sp_auto_dm&fbclid=PAT01DUATMYQJleHRuA2FlbQIxMABzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAacXCa5caNi8F-wMGxdetbzEQRBhYfPbPydzXyZschsXLsnk4O92q2aGbdFb-Q_aem_dMTY4if6G6OPXESgEEuW-w"))
+
 
