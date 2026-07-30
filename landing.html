@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE WIRE — Automated Research Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,650;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:        #0d0c0a;
+    --panel:     #17140f;
+    --panel-2:   #1e1a13;
+    --rule:      #3a3327;
+    --cream:     #f2ead8;
+    --cream-dim: #b6ac93;
+    --amber:     #e8a33d;
+    --brick:     #b5472b;
+    --sage:      #8fa06e;
+}
+*{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+body{
+    margin:0;
+    background: radial-gradient(ellipse 120% 55% at 50% -8%, #241f16 0%, #0d0c0a 55%);
+    color: var(--cream);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+::selection{ background: var(--amber); color: #0d0c0a; }
+a{ color: inherit; }
+.wrap{ max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+@keyframes fadeDown{ from{opacity:0; transform: translateY(-12px);} to{opacity:1; transform:none;} }
+@keyframes fadeUp{ from{opacity:0; transform: translateY(16px);} to{opacity:1; transform:none;} }
+@keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(232,163,61,.55); }
+    50%{ box-shadow: 0 0 0 9px rgba(232,163,61,0); }
+}
+@keyframes dashFlow{ to{ stroke-dashoffset: -40; } }
+@keyframes blink{ 50%{ opacity: 0; } }
+@keyframes stampIn{
+    0%{ opacity:0; transform: scale(2.2) rotate(-8deg); }
+    60%{ opacity:1; transform: scale(.94) rotate(-8deg); }
+    100%{ opacity:1; transform: scale(1) rotate(-8deg); }
+}
+@keyframes tickerScroll{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+
+/* ---------- nav / masthead ---------- */
+.masthead{
+    border-bottom: 1px solid var(--rule);
+    position: sticky; top:0; z-index: 50;
+    background: rgba(13,12,10,.86);
+    backdrop-filter: blur(8px);
+}
+.progress-rail{ position:absolute; left:0; bottom:-1px; height:2px; width:100%; background:transparent; }
+.progress-fill{ height:100%; width:0%; background: linear-gradient(90deg, var(--brick), var(--amber)); transition: width .08s linear; }
+.masthead .row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 0;
+}
+.wordmark{
+    font-family:'Fraunces', serif; font-weight:650; font-size:1.35rem; letter-spacing:-.01em;
+}
+.wordmark span{ color: var(--amber); }
+.navlinks{ display:flex; gap: 28px; font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.1em; text-transform: uppercase; }
+.navlinks a{ text-decoration:none; color: var(--cream-dim); transition: color .2s ease; }
+.navlinks a:hover{ color: var(--amber); }
+.nav-cta{
+    font-family:'IBM Plex Mono', monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+    border:1px solid var(--rule); padding: 7px 14px; border-radius:2px; text-decoration:none; color: var(--cream);
+    transition: all .2s ease;
+}
+.nav-cta:hover{ border-color: var(--amber); color: var(--amber); }
+
+/* ---------- ticker ---------- */
+.ticker{
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden; white-space: nowrap;
+    font-family:'IBM Plex Mono', monospace; font-size: .68rem; letter-spacing:.14em;
+    color: var(--cream-dim); background: var(--panel);
+}
+.ticker-track{ display:inline-block; padding: 7px 0; animation: tickerScroll 26s linear infinite; }
+.ticker-track span{ margin: 0 26px; }
+.ticker-track span b{ color: var(--amber); }
+
+/* ---------- hero ---------- */
+.hero{ padding: 78px 0 60px 0; }
+.hero-grid{ display:grid; grid-template-columns: 1.15fr .95fr; gap: 56px; align-items: start; }
+.eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:.72rem; letter-spacing:.22em; color: var(--amber);
+    text-transform: uppercase; display:flex; align-items:center; gap: 10px;
+    animation: fadeDown .7s ease both;
+}
+.eyebrow::before{ content:""; width: 7px; height:7px; border-radius:50%; background: var(--amber); animation: pulseGlow 1.6s ease-in-out infinite; }
+.hero h1{
+    font-family:'Fraunces', serif; font-weight:600; font-size: 3.6rem; line-height: 1.04;
+    margin: .3em 0 .35em 0; letter-spacing: -.015em;
+    animation: fadeUp .75s ease both; animation-delay:.08s;
+}
+.hero h1 em{ font-style: italic; color: var(--amber); font-weight:500; }
+.hero p.lede{
+    font-size: 1.06rem; line-height: 1.7; color: #e3d9c1; max-width: 46ch;
+    animation: fadeUp .75s ease both; animation-delay:.16s;
+}
+.hero-ctas{ display:flex; gap: 14px; margin-top: 30px; animation: fadeUp .75s ease both; animation-delay:.24s; }
+.btn-primary{
+    background: var(--amber); color:#17140f; border:none; font-family:'IBM Plex Mono', monospace;
+    font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:.78rem;
+    padding: 14px 24px; border-radius:2px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 10px 24px rgba(232,163,61,.25); }
+.btn-ghost{
+    border:1px solid var(--rule); color: var(--cream); font-family:'IBM Plex Mono', monospace;
+    font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:.78rem;
+    padding: 14px 22px; border-radius:2px; text-decoration:none; transition: all .2s ease;
+}
+.btn-ghost:hover{ border-color: var(--sage); color: var(--sage); }
+
+.hero-meta{
+    margin-top: 34px; display:flex; gap: 30px; font-family:'IBM Plex Mono', monospace; font-size:.7rem;
+    color: var(--cream-dim); letter-spacing:.06em; animation: fadeUp .75s ease both; animation-delay:.3s;
+}
+.hero-meta b{ color: var(--cream); display:block; font-size:1.15rem; font-family:'Fraunces', serif; font-weight:600; }
+
+/* ---------- hero demo card (signature element) ---------- */
+.demo-card{
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 5px;
+    padding: 22px 22px 26px 22px; animation: fadeUp .8s ease both; animation-delay:.2s;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.6);
+    transform-style: preserve-3d; will-change: transform;
+    transition: transform .25s ease-out, box-shadow .25s ease-out;
+}
+.demo-card .dc-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; }
+.dc-dots{ display:flex; gap:6px; }
+.dc-dots i{ width:8px; height:8px; border-radius:50%; background: var(--rule); display:inline-block; }
+.dc-title{ font-family:'IBM Plex Mono', monospace; font-size:.68rem; letter-spacing:.14em; color: var(--cream-dim); text-transform:uppercase; }
+
+.rail{ display:flex; align-items:flex-start; margin: 6px 0 18px 0; }
+.station{ flex:1; text-align:center; position:relative; padding-top:4px; }
+.node{
+    width: 38px; height:38px; border-radius:50%; margin:0 auto 10px auto;
+    border:1.5px solid var(--rule); background: var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:.64rem; color: var(--cream-dim);
+    transition: all .35s ease; position:relative; z-index:2;
+}
+.node.active{ border-color: var(--amber); color: var(--amber); background:#241c10; animation: pulseGlow 1.4s ease-in-out infinite; }
+.node.done{ border-color: var(--sage); background: var(--sage); color:#101a0c; }
+.connector{ position:absolute; top:19px; left:50%; width:100%; height:2px; z-index:1; }
+.connector svg{ width:100%; height:2px; overflow:visible; }
+.connector line{ stroke: var(--rule); stroke-width:2; }
+.connector.flow line{ stroke: var(--amber); stroke-dasharray:6 6; animation: dashFlow 1s linear infinite; }
+.connector.filled line{ stroke: var(--sage); stroke-dasharray:none; }
+.station:last-child .connector{ display:none; }
+.station .label{ font-family:'IBM Plex Mono', monospace; font-size:.62rem; letter-spacing:.1em; color: var(--cream); font-weight:600; }
+.station .tag{ display:block; margin-top:4px; font-family:'IBM Plex Mono', monospace; font-size:.56rem; letter-spacing:.08em; }
+.tag.idle{ color:#5c5442; } .tag.active{ color: var(--amber); } .tag.done{ color: var(--sage); }
+
+.dc-terminal{
+    background: var(--panel-2); border:1px solid var(--rule); border-radius:3px; padding: 12px 14px;
+    font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:#cfc6ac; min-height: 96px;
+}
+.dc-terminal .line{ margin: 3px 0; opacity:0; animation: fadeUp .3s ease forwards; }
+.dc-terminal .t{ color:#6f664f; margin-right:7px; }
+.dc-terminal .cursor{ display:inline-block; width:6px; height:12px; background: var(--amber); animation: blink 1s step-end infinite; vertical-align:-2px; }
+
+/* ---------- section shell ---------- */
+section{ padding: 78px 0; border-top: 1px solid var(--rule); }
+.section-head{ margin-bottom: 40px; }
+.section-eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.2em; color: var(--brick); text-transform:uppercase; }
+.section-head h2{ font-family:'Fraunces', serif; font-weight:600; font-size:2.1rem; margin:.3em 0 0 0; max-width: 24ch; }
+
+.reveal{ opacity:0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.show{ opacity:1; transform:none; }
+.desk-row.reveal:nth-child(1){ transition-delay: 0s; }
+.desk-row.reveal:nth-child(2){ transition-delay: .08s; }
+.desk-row.reveal:nth-child(3){ transition-delay: .16s; }
+.desk-row.reveal:nth-child(4){ transition-delay: .24s; }
+.fcard.reveal:nth-child(1){ transition-delay: 0s; }
+.fcard.reveal:nth-child(2){ transition-delay: .1s; }
+.fcard.reveal:nth-child(3){ transition-delay: .2s; }
+
+/* ---------- stations list ---------- */
+.desk-list{ display:flex; flex-direction:column; }
+.desk-row{
+    display:grid; grid-template-columns: 90px 1fr 1.1fr; gap: 26px; align-items: start;
+    padding: 28px 0; border-top: 1px solid var(--rule);
+}
+.desk-row:last-child{ border-bottom: 1px solid var(--rule); }
+.desk-num{ font-family:'Fraunces', serif; font-size: 2.1rem; color: var(--rule); font-weight:600; }
+.desk-row:hover .desk-num{ color: var(--amber); transition: color .3s ease; }
+.desk-name{ font-family:'IBM Plex Mono', monospace; font-size:.86rem; letter-spacing:.1em; color: var(--cream); }
+.desk-role{ font-family:'Fraunces', serif; font-style:italic; color: var(--cream-dim); margin-top:4px; font-size:.92rem; }
+.desk-desc{ font-size:.94rem; line-height:1.7; color:#dcd3ba; }
+.desk-desc .dispatch{
+    display:block; margin-top: 12px; font-family:'IBM Plex Mono', monospace; font-size:.76rem;
+    color: var(--sage); border-left: 2px solid var(--sage); padding-left: 10px;
+}
+
+/* ---------- feature cards ---------- */
+.features{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.fcard{
+    background: var(--panel); border:1px solid var(--rule); border-radius:4px; padding: 22px;
+    transition: transform .25s ease, border-color .25s ease;
+}
+.fcard:hover{ transform: translateY(-5px); border-color: var(--amber); }
+.fcard h3{ font-family:'Fraunces', serif; font-size:1.2rem; margin: 14px 0 8px 0; }
+.fcard p{ font-size:.86rem; line-height:1.6; color: var(--cream-dim); margin:0; }
+.fcard .mini{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem; color: var(--cream-dim);
+    background: var(--panel-2); border:1px solid var(--rule); border-radius:3px; padding:10px 12px; margin-bottom:6px;
+}
+.fcard .mini .stamp-mini{ color: var(--sage); border:1px solid var(--sage); border-radius:3px; padding:1px 6px; float:right; transform: rotate(-6deg); font-size:.6rem; }
+.fcard .mini .note{ font-family:'Fraunces', serif; font-style:italic; color: var(--brick); }
+
+/* ---------- get started ---------- */
+.getdesk{
+    background: var(--panel-2); border:1px solid var(--rule); border-radius:6px;
+    padding: 40px; display:grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items:center;
+}
+.getdesk h2{ font-family:'Fraunces', serif; font-size:1.9rem; margin:0 0 12px 0; }
+.getdesk p{ color: var(--cream-dim); font-size:.94rem; line-height:1.7; margin:0 0 20px 0; }
+.case-preview{
+    background: var(--bg); border:1px solid var(--rule); border-radius:4px; padding:22px 24px;
+    position:relative; overflow:hidden; transition: transform .3s ease, border-color .3s ease;
+}
+.case-preview:hover{ transform: translateY(-3px); border-color: var(--sage); }
+.cp-stamp{
+    position:absolute; top:18px; right:20px; font-family:'IBM Plex Mono', monospace; font-weight:700;
+    letter-spacing:.1em; color: var(--sage); border:2px solid var(--sage); border-radius:3px;
+    padding: 2px 9px; font-size:.62rem; transform: rotate(-8deg);
+}
+.cp-eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:.64rem; letter-spacing:.14em; color: var(--cream-dim); text-transform:uppercase; }
+.case-preview h4{ font-family:'Fraunces', serif; font-size:1.2rem; margin:6px 100px 6px 0; font-weight:600; }
+.cp-meta{
+    font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.06em; color: var(--cream-dim);
+    text-transform:uppercase; border-bottom:1px solid var(--rule); padding-bottom:10px; margin-bottom:10px;
+}
+.cp-excerpt{ font-size:.86rem; line-height:1.65; color:#dcd3ba; margin:0 0 12px 0; }
+.cp-note{
+    font-family:'Fraunces', serif; font-style:italic; font-size:.84rem; color:#f0d9cf;
+    border-left: 2px solid var(--brick); padding-left:10px;
+}
+
+/* ---------- footer ---------- */
+footer{ border-top: 3px double var(--rule); padding: 34px 0; }
+.foot-row{ display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono', monospace; font-size:.7rem; color: var(--cream-dim); letter-spacing:.06em; }
+.foot-row .wordmark{ font-size:1rem; }
+
+@media (max-width: 860px){
+    .hero-grid{ grid-template-columns: 1fr; }
+    .hero h1{ font-size: 2.5rem; }
+    .features{ grid-template-columns: 1fr; }
+    .desk-row{ grid-template-columns: 60px 1fr; }
+    .desk-row .desk-desc{ grid-column: 1 / -1; }
+    .getdesk{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+    <div class="wrap row">
+        <div class="wordmark">THE <span>WIRE</span></div>
+        <div class="navlinks">
+            <a href="#desks">The Desks</a>
+            <a href="#file">The File</a>
+            <a href="#start">Open a Case</a>
+        </div>
+        <a class="nav-cta" href="?view=app" target="_top">Open the App →</a>
+    </div>
+    <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="ticker">
+    <div class="ticker-track">
+        <span><b>SCOUT</b> sourced 3 new leads</span>
+        <span><b>READER</b> filed deep-dive notes</span>
+        <span><b>WRITER</b> drafted 640 words</span>
+        <span><b>EDITOR</b> signed off — case closed</span>
+        <span><b>SCOUT</b> sourced 3 new leads</span>
+        <span><b>READER</b> filed deep-dive notes</span>
+        <span><b>WRITER</b> drafted 640 words</span>
+        <span><b>EDITOR</b> signed off — case closed</span>
+    </div>
+</div>
+
+<section class="hero" style="border-top:none; padding-top: 64px;">
+    <div class="wrap hero-grid">
+        <div>
+            <div class="eyebrow">Automated Research Desk</div>
+            <h1>Four desks.<br>One story, <em>filed</em> in minutes.</h1>
+            <p class="lede">
+                THE WIRE runs your topic through a real newsroom: a Scout finds
+                the leads, a Reader digs the archive, a Writer drafts the copy,
+                and an Editor signs it off — all four agents, working the same
+                case, live on screen.
+            </p>
+            <div class="hero-ctas">
+                <a class="btn-primary" href="?view=app" target="_top">Dispatch the Desk →</a>
+                <a class="btn-ghost" href="#desks">See how it works</a>
+            </div>
+            <div class="hero-meta">
+                <div><b>4</b>agents on the case</div>
+                <div><b>1</b>topic in</div>
+                <div><b>1</b>filed report out</div>
+            </div>
+        </div>
+
+        <div class="demo-card">
+            <div class="dc-top">
+                <div class="dc-title">Live Dispatch — Case No. 0001</div>
+                <div class="dc-dots"><i></i><i></i><i></i></div>
+            </div>
+            <div class="rail" id="demoRail"></div>
+            <div class="dc-terminal" id="demoTerminal"></div>
+        </div>
+    </div>
+</section>
+
+<section id="desks">
+    <div class="wrap">
+        <div class="section-head reveal">
+            <div class="section-eyebrow">The Newsroom</div>
+            <h2>Every case runs through the same four desks, in order.</h2>
+        </div>
+        <div class="desk-list">
+            <div class="desk-row reveal">
+                <div class="desk-num">01</div>
+                <div>
+                    <div class="desk-name">SCOUT</div>
+                    <div class="desk-role">sources the leads</div>
+                </div>
+                <div class="desk-desc">
+                    Runs a live search on your topic and comes back with the
+                    freshest, most reliable leads worth chasing.
+                    <span class="dispatch">→ dispatched: "find recent, reliable, detailed information"</span>
+                </div>
+            </div>
+            <div class="desk-row reveal">
+                <div class="desk-num">02</div>
+                <div>
+                    <div class="desk-name">READER</div>
+                    <div class="desk-role">digs the archive</div>
+                </div>
+                <div class="desk-desc">
+                    Picks the most relevant lead the Scout filed and scrapes it
+                    for the deeper, harder-to-find detail.
+                    <span class="dispatch">→ dispatched: "pick the most relevant URL and scrape it"</span>
+                </div>
+            </div>
+            <div class="desk-row reveal">
+                <div class="desk-num">03</div>
+                <div>
+                    <div class="desk-name">WRITER</div>
+                    <div class="desk-role">drafts the copy</div>
+                </div>
+                <div class="desk-desc">
+                    Combines both desks' notes into a single, readable draft —
+                    the first version of the story.
+                    <span class="dispatch">→ dispatched: "draft the report from combined research"</span>
+                </div>
+            </div>
+            <div class="desk-row reveal">
+                <div class="desk-num">04</div>
+                <div>
+                    <div class="desk-name">EDITOR</div>
+                    <div class="desk-role">signs it off</div>
+                </div>
+                <div class="desk-desc">
+                    Reads the draft with a critical eye and leaves margin notes
+                    before the case is marked filed.
+                    <span class="dispatch">→ dispatched: "review the report and file feedback"</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="file">
+    <div class="wrap">
+        <div class="section-head reveal">
+            <div class="section-eyebrow">What Lands In The File</div>
+            <h2>Not just an answer — a case file you can open, read, and keep.</h2>
+        </div>
+        <div class="features">
+            <div class="fcard reveal">
+                <div class="mini">
+                    <span class="t" style="color:#6f664f;">14:02:07</span> Scout filed initial leads.<br>
+                    <span class="t" style="color:#6f664f;">14:02:19</span> Reader filed deep-dive notes.<span class="cursor" style="display:inline-block;width:6px;height:12px;background:var(--amber);vertical-align:-2px;"></span>
+                </div>
+                <h3>The wire feed</h3>
+                <p>Watch every desk clock in and file its notes, live, in a running terminal log — no black box.</p>
+            </div>
+            <div class="fcard reveal">
+                <div class="mini"><span class="stamp-mini">FILED</span>Solid-State Batteries in 2026<br>Filed 30 Jul 2026 · Drafted by WRITER</div>
+                <h3>The filed report</h3>
+                <p>Your finished piece, stamped and dated like a real case file, ready to read or download as Markdown.</p>
+            </div>
+            <div class="fcard reveal">
+                <div class="mini"><span class="note">"Tighten the third paragraph — the source is stronger than the claim."</span></div>
+                <h3>Editor's margin notes</h3>
+                <p>The Editor's critique sits beside the draft, not buried — so you always see what to fix next.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="start">
+    <div class="wrap">
+        <div class="getdesk reveal">
+            <div>
+                <h2>Every case gets filed the same way.</h2>
+                <p>THE WIRE stamps, dates, and signs off every report the same way — a Scout's leads, a Reader's detail, a Writer's draft, and an Editor's note, filed together as one document you can read or download.</p>
+                <a class="btn-primary" href="?view=app" target="_top">Open THE WIRE →</a>
+            </div>
+            <div class="case-preview">
+                <div class="cp-stamp">FILED</div>
+                <div class="cp-eyebrow">Case No. 0114</div>
+                <h4>Solid-State Batteries in 2026</h4>
+                <div class="cp-meta">Filed 30 Jul 2026 · Drafted by WRITER · Signed off by EDITOR</div>
+                <p class="cp-excerpt">Solid-state batteries have moved from lab curiosity to near-commercial reality, with energy density crossing 400&nbsp;Wh/kg in prototype cells…</p>
+                <div class="cp-note">"Tighten the third paragraph — the source is stronger than the claim."</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="wrap foot-row">
+        <div class="wordmark">THE <span style="color:var(--amber);">WIRE</span></div>
+        <div>Vol. I · Automated Research Desk · Built on LangChain + Streamlit</div>
+    </div>
+</footer>
+
+<script>
+// ---------- scroll reveal ----------
+const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('show'); } });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ---------- scroll progress rail ----------
+const progressFill = document.getElementById('progressFill');
+function updateProgress(){
+    const h = document.documentElement;
+    const scrolled = h.scrollTop;
+    const height = h.scrollHeight - h.clientHeight;
+    const pct = height > 0 ? (scrolled / height) * 100 : 0;
+    progressFill.style.width = pct + '%';
+}
+document.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ---------- demo card parallax tilt ----------
+const demoCard = document.querySelector('.demo-card');
+if(demoCard && window.matchMedia('(pointer: fine)').matches){
+    demoCard.addEventListener('mousemove', (e) => {
+        const r = demoCard.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        demoCard.style.transform = `perspective(900px) rotateX(${(-py*4).toFixed(2)}deg) rotateY(${(px*4).toFixed(2)}deg) translateY(-2px)`;
+        demoCard.style.boxShadow = `${(-px*20).toFixed(0)}px ${20-py*10}px 60px -20px rgba(0,0,0,.65)`;
+    });
+    demoCard.addEventListener('mouseleave', () => {
+        demoCard.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg)';
+        demoCard.style.boxShadow = '0 30px 60px -20px rgba(0,0,0,.6)';
+    });
+}
+
+// ---------- live-looking hero demo loop ----------
+const STATIONS = [
+    { label: "SCOUT",  msg: "Scout filed initial leads." },
+    { label: "READER", msg: "Reader filed deep-dive notes." },
+    { label: "WRITER", msg: "Writer filed the first draft." },
+    { label: "EDITOR", msg: "Editor signed off. Case closed." },
+];
+const railEl = document.getElementById('demoRail');
+const termEl = document.getElementById('demoTerminal');
+
+function buildRail(states){
+    let html = "";
+    STATIONS.forEach((s, i) => {
+        const st = states[i];
+        const nodeCls = st === 'active' ? 'active' : st === 'done' ? 'done' : '';
+        const glyph = st === 'done' ? '✓' : String(i+1).padStart(2,'0');
+        const tagText = st === 'active' ? 'WORKING…' : st === 'done' ? 'FILED' : 'STANDING BY';
+        const tagCls = st === 'idle' ? 'idle' : st === 'active' ? 'active' : 'done';
+        let connCls = '';
+        if(i < STATIONS.length - 1){
+            const next = states[i+1];
+            if(st === 'done' && next === 'done') connCls = 'filled';
+            else if(st === 'active' || (st === 'done' && next !== 'idle')) connCls = 'flow';
+        }
+        const connector = i < STATIONS.length - 1
+            ? `<div class="connector ${connCls}"><svg preserveAspectRatio="none"><line x1="0" y1="1" x2="100%" y2="1"/></svg></div>`
+            : '';
+        html += `<div class="station">${connector}<div class="node ${nodeCls}">${glyph}</div><div class="label">${s.label}</div><div class="tag ${tagCls}">${tagText}</div></div>`;
+    });
+    railEl.innerHTML = html;
+}
+
+let logLines = [];
+function pushLog(msg){
+    const ts = new Date().toTimeString().slice(0,8);
+    logLines.push(`<div class="line" style="animation-delay:.02s;"><span class="t">${ts}</span>${msg}</div>`);
+    logLines = logLines.slice(-4);
+    termEl.innerHTML = logLines.join('') + '<span class="cursor"></span>';
+}
+
+let step = -1;
+let states = STATIONS.map(() => 'idle');
+
+function tick(){
+    step++;
+    if(step >= STATIONS.length){
+        step = -1;
+        states = STATIONS.map(() => 'idle');
+        logLines = [];
+        buildRail(states);
+        termEl.innerHTML = '<span class="cursor"></span>';
+        setTimeout(tick, 1000);
+        return;
+    }
+    states[step] = 'active';
+    buildRail(states);
+    pushLog(`${STATIONS[step].label} is on the case…`);
+    setTimeout(() => {
+        states[step] = 'done';
+        buildRail(states);
+        pushLog(STATIONS[step].msg);
+        setTimeout(tick, 700);
+    }, 1300);
+}
+
+buildRail(states);
+termEl.innerHTML = '<span class="cursor"></span>';
+setTimeout(tick, 900);
+</script>
+
+</body>
+</html>

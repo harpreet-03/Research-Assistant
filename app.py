@@ -1,9 +1,78 @@
+
 import time
+import io
 import datetime as dt
+from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
+import markdown as md_lib
+from xhtml2pdf import pisa
 
 from agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
+
+
+MD_EXTENSIONS = ["extra", "sane_lists", "nl2br"]
+
+
+def md_to_html(text: str) -> str:
+    """Turn the writer/critic's markdown-ish output (headings, **bold**,
+    bullet lists, etc.) into real HTML instead of showing raw asterisks."""
+    if not isinstance(text, str):
+        text = str(text)
+    return md_lib.markdown(text.strip(), extensions=MD_EXTENSIONS)
+
+
+def build_report_pdf(topic: str, report_md: str, feedback_md: str, filed_date: str) -> bytes:
+    """Render the filed report + editor's note as a clean, professional,
+    print-ready PDF (light theme — dark mode doesn't print well)."""
+    report_html = md_lib.markdown(report_md.strip(), extensions=MD_EXTENSIONS)
+    feedback_html = md_lib.markdown(feedback_md.strip(), extensions=MD_EXTENSIONS)
+
+    doc_html = f"""
+    <html>
+    <head>
+    <style>
+        @page {{ size: A4; margin: 2.4cm 2.2cm; }}
+        body {{ font-family: 'Helvetica', sans-serif; font-size: 10.5pt; color: #201d16; line-height: 1.55; }}
+        .eyebrow {{ font-family: 'Courier', monospace; font-size: 8pt; letter-spacing: 2px;
+                    color: #b5472b; text-transform: uppercase; }}
+        h1.title {{ font-family: 'Times-Bold'; font-size: 24pt; margin: 6px 0 2px 0; color: #17140f; }}
+        .meta {{ font-family: 'Courier', monospace; font-size: 8pt; color: #6b6350;
+                 border-bottom: 1px solid #d8d0ba; padding-bottom: 10px; margin-bottom: 18px; }}
+        h1, h2, h3 {{ font-family: 'Times-Bold'; color: #17140f; margin-top: 18px; margin-bottom: 8px; }}
+        h2 {{ font-size: 14pt; color: #8a3d26; border-bottom: 0.75px solid #e3dcc8; padding-bottom: 4px; }}
+        h3 {{ font-size: 12pt; }}
+        p {{ margin: 0 0 10px 0; text-align: justify; }}
+        ul, ol {{ margin: 0 0 12px 20px; padding: 0; }}
+        li {{ margin-bottom: 4px; }}
+        strong {{ color: #17140f; }}
+        .section-divider {{ border: none; border-top: 1.5px solid #17140f; margin: 26px 0 16px 0; }}
+        .editor-head {{ font-family: 'Courier', monospace; font-size: 9pt; letter-spacing: 1.5px;
+                         text-transform: uppercase; color: #4a6b3a; margin-bottom: 8px; }}
+        .editor-note {{ background-color: #f3f0e6; padding: 12px 16px; border-left: 2.5px solid #6f8a52; }}
+        .footer-note {{ font-family: 'Courier', monospace; font-size: 7.5pt; color: #9a927a; margin-top: 30px; }}
+    </style>
+    </head>
+    <body>
+        <div class="eyebrow">Case File &middot; Automated Research Desk</div>
+        <h1 class="title">{topic}</h1>
+        <div class="meta">FILED {filed_date} &nbsp;&middot;&nbsp; DRAFTED BY WRITER &nbsp;&middot;&nbsp; SIGNED OFF BY EDITOR</div>
+
+        {report_html}
+
+        <hr class="section-divider">
+        <div class="editor-head">Editor's Note</div>
+        <div class="editor-note">{feedback_html}</div>
+
+        <div class="footer-note">THE WIRE &mdash; Automated Research Desk</div>
+    </body>
+    </html>
+    """
+
+    buffer = io.BytesIO()
+    pisa.CreatePDF(doc_html, dest=buffer)
+    return buffer.getvalue()
 
 
 def html(text: str) -> None:
@@ -30,6 +99,22 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# ─────────────────────────────────────────────────────────────────────────
+# VIEW ROUTING — ?view=app shows the pipeline, anything else shows landing.
+# The landing page's own CTAs link to "?view=app" with target="_top" so
+# clicking them breaks out of the embedding iframe and reloads this same
+# Streamlit app in "app" view.
+# ─────────────────────────────────────────────────────────────────────────
+view = st.query_params.get("view", "landing")
+
+if view != "app":
+    landing_path = Path(__file__).parent / "landing.html"
+    if landing_path.exists():
+        components.html(landing_path.read_text(encoding="utf-8"), height=2700, scrolling=True)
+    else:
+        st.error("landing.html not found next to app.py — place it in the same folder.")
+    st.stop()
 
 STATIONS = [
     {"key": "scout",  "label": "SCOUT",  "role": "sources the leads",   "verb": "scouting the wire"},
@@ -115,6 +200,23 @@ st.markdown(
         line-height: 1.5;
     }
     .masthead .dateline b{ color: var(--cream); }
+
+    .back-strip{
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: .72rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        animation: fadeDown .6s ease both;
+    }
+    .back-strip a{
+        color: var(--cream-dim);
+        text-decoration: none;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 2px;
+        transition: color .2s ease, border-color .2s ease;
+    }
+    .back-strip a:hover{ color: var(--amber); border-color: var(--amber); }
 
     @keyframes fadeDown{ from{opacity:0; transform: translateY(-10px);} to{opacity:1; transform:none;} }
     @keyframes fadeUp{ from{opacity:0; transform: translateY(10px);} to{opacity:1; transform:none;} }
@@ -267,7 +369,7 @@ st.markdown(
         animation: stampIn .5s cubic-bezier(.2,1.4,.4,1) both;
         animation-delay: .3s;
     }
-    .filed-card h2{
+    .filed-card > h2{
         font-family:'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px 0; padding-right: 120px;
     }
     .filed-card .meta{
@@ -277,6 +379,32 @@ st.markdown(
     }
     .filed-card .body{
         font-family:'Inter', sans-serif; font-size: .98rem; line-height: 1.75; color: #e9e1cd;
+    }
+    .filed-card .body h1,
+    .filed-card .body h2,
+    .filed-card .body h3{
+        font-family:'Fraunces', serif; color: var(--cream); font-weight: 600;
+        margin: 22px 0 10px 0; line-height: 1.3;
+    }
+    .filed-card .body h1{ font-size: 1.35rem; }
+    .filed-card .body h2{
+        font-size: 1.15rem; color: var(--amber); font-weight: 600;
+        border-bottom: 1px solid var(--rule); padding-bottom: 6px;
+    }
+    .filed-card .body h3{ font-size: 1.02rem; font-style: italic; color: var(--sage); }
+    .filed-card .body p{ margin: 0 0 14px 0; }
+    .filed-card .body ul,
+    .filed-card .body ol{ margin: 0 0 14px 22px; padding: 0; }
+    .filed-card .body li{ margin-bottom: 6px; }
+    .filed-card .body strong{ color: var(--cream); font-weight: 700; }
+    .filed-card .body em{ color: var(--cream-dim); }
+    .filed-card .body blockquote{
+        border-left: 2px solid var(--rule); margin: 0 0 14px 0; padding: 4px 0 4px 14px;
+        color: var(--cream-dim); font-style: italic;
+    }
+    .filed-card .body code{
+        font-family:'IBM Plex Mono', monospace; background: var(--panel); padding: 1px 5px;
+        border-radius: 2px; font-size: .88em;
     }
 
     .margin-note{
@@ -294,12 +422,14 @@ st.markdown(
     .margin-note .body{
         font-family: 'Fraunces', serif; font-style: italic; font-size: .98rem; color: #f0d9cf; line-height:1.6;
     }
+    .margin-note .body p{ margin: 0 0 10px 0; }
+    .margin-note .body strong{ color: #fce8de; font-weight: 700; }
 
     div[data-testid="stDownloadButton"] > button{
         background: transparent !important; color: var(--cream) !important;
         border: 1px solid var(--rule) !important; font-family:'IBM Plex Mono', monospace !important;
         letter-spacing:.1em; font-size:.72rem !important; text-transform: uppercase;
-        border-radius: 2px !important; margin-top: 18px;
+        border-radius: 2px !important; margin-top: 6px;
     }
     div[data-testid="stDownloadButton"] > button:hover{ border-color: var(--sage); color: var(--sage) !important; }
     </style>
@@ -315,6 +445,7 @@ def render_masthead():
     today = dt.datetime.now().strftime("%A, %d %B %Y").upper()
     html(
         f"""
+        <div class="back-strip"><a href="?">← Back to THE WIRE</a></div>
         <div class="masthead">
             <div>
                 <div class="eyebrow">Case File · Automated Research Desk</div>
@@ -413,28 +544,43 @@ with terminal_slot.container():
 
 if st.session_state.result:
     with result_slot.container():
-        report, feedback, topic_done = st.session_state.result
-        today = dt.datetime.now().strftime("%d %b %Y, %H:%M")
+        report_md, feedback_md, topic_done, filed_date = st.session_state.result
+        report_html = md_to_html(report_md)
+        feedback_html = md_to_html(feedback_md)
+
         html(
             f"""
             <div class="filed-card">
                 <div class="stamp">FILED</div>
                 <h2>{topic_done}</h2>
-                <div class="meta">Filed {today} · Drafted by WRITER · Signed off by EDITOR</div>
-                <div class="body">{report}</div>
+                <div class="meta">Filed {filed_date} · Drafted by WRITER · Signed off by EDITOR</div>
+                <div class="body">{report_html}</div>
             </div>
             <div class="margin-note">
                 <div class="h">Editor's margin note</div>
-                <div class="body">{feedback}</div>
+                <div class="body">{feedback_html}</div>
             </div>
             """
         )
-        st.download_button(
-            "↓ Download filed report",
-            data=f"# {topic_done}\n\n{report}\n\n---\nEditor's note:\n{feedback}\n",
-            file_name=f"wire_report_{topic_done[:30].replace(' ', '_')}.md",
-            mime="text/markdown",
-        )
+
+        file_stub = topic_done[:40].strip().replace(" ", "_") or "wire_report"
+        col_pdf, col_md = st.columns(2)
+        with col_pdf:
+            st.download_button(
+                "↓ Download PDF",
+                data=build_report_pdf(topic_done, report_md, feedback_md, filed_date),
+                file_name=f"wire_report_{file_stub}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        with col_md:
+            st.download_button(
+                "↓ Download Markdown",
+                data=f"# {topic_done}\n\n{report_md}\n\n---\n**Editor's note:**\n\n{feedback_md}\n",
+                file_name=f"wire_report_{file_stub}.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -523,7 +669,8 @@ if run_clicked:
             report_text = state["report"] if isinstance(state["report"], str) else str(state["report"])
             feedback_text = state["feedback"] if isinstance(state["feedback"], str) else str(state["feedback"])
 
-            st.session_state.result = (report_text, feedback_text, topic)
+            filed_date = dt.datetime.now().strftime("%d %b %Y, %H:%M")
+            st.session_state.result = (report_text, feedback_text, topic, filed_date)
             st.session_state.case_no += 1
 
         except Exception as e:
