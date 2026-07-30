@@ -1,11 +1,3 @@
-"""
-THE WIRE — an animated newsroom-style front end for the multi-agent
-research pipeline (Scout / Reader / Writer / Editor).
-
-Run with:
-    streamlit run streamlit_app.py
-"""
-
 import time
 import datetime as dt
 

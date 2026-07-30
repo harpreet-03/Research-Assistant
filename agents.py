@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 llm = ChatMistralAI(
-    model="mistral-small-2506",
+    model="mistral-small-2506", #for testing purposes... I used free model
     api_key=os.getenv("MISTRAL_API_KEY"),
     temperature=0
 )
