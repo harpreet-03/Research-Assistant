@@ -658,7 +658,7 @@ if run_clicked:
                             "user",
                             f"Based on the following search results about '{topic}', "
                             f"pick the most relevant URL and scrape it for deeper content.\n\n"
-                            f"Search Results:\n{state['search_results'][:800]}",
+                            f"Search Results:\n{state['search_results'][:2500]}",
                         )
                     ]
                 }

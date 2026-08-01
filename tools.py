@@ -1,4 +1,3 @@
-
 from dotenv import load_dotenv
 load_dotenv() 
 
@@ -29,7 +28,7 @@ def web_search(query: str) -> str:
         out.append(
             f"Title: {r['title']}\n"
             f"URL: {r['url']}\n"
-            f"Snippet: {r['content'][:300]}\n"
+            f"Snippet: {r['content'][:600]}\n"
         )
 
     return "\n----\n".join(out)
@@ -43,10 +42,8 @@ def scrape_url(url: str) -> str:
         soup = BeautifulSoup(resp.text, "html.parser")
         for tag in soup(["script", "style", "nav", "footer"]):
             tag.decompose()
-        return soup.get_text(separator=" ", strip=True)[:3000]
+        # 3000 chars (~500 words) was too thin to support a 2-3 page report;
+        # 9000 (~1500 words) gives the writer real material to draw from.
+        return soup.get_text(separator=" ", strip=True)[:9000]
     except Exception as e:
         return f"Could not scrape URL: {str(e)}"
-
-
-
-
