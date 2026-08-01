@@ -1,4 +1,3 @@
-
 import time
 import io
 import datetime as dt
@@ -101,17 +100,44 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────────────────────────────────
+# BASE CHROME — hide Streamlit's default header/menu/footer and top padding
+# for BOTH views. (Previously this only ran for the "app" view, which is
+# why the landing view showed a blank gap and Streamlit's default chrome.)
+# ─────────────────────────────────────────────────────────────────────────
+st.markdown(
+    """
+    <style>
+    html, body, [class*="css"]{ background-color: #0d0c0a !important; }
+    #MainMenu, header, footer{ visibility: hidden; }
+    .block-container{ padding-top: 0; padding-bottom: 0; max-width: 100%; }
+    iframe{ display: block; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ─────────────────────────────────────────────────────────────────────────
 # VIEW ROUTING — ?view=app shows the pipeline, anything else shows landing.
-# The landing page's own CTAs link to "?view=app" with target="_top" so
-# clicking them breaks out of the embedding iframe and reloads this same
-# Streamlit app in "app" view.
+# The landing page's CTAs open the app in a NEW TAB via window.open()
+# (see openApp() in landing.html) rather than target="_top", because
+# Streamlit's components.html iframe sandbox does not grant
+# allow-top-navigation — target="_top" links are silently blocked there
+# (a known, currently-unresolved Streamlit platform limitation:
+# github.com/streamlit/streamlit/issues/6922). window.open() works because
+# the sandbox does grant allow-popups.
 # ─────────────────────────────────────────────────────────────────────────
 view = st.query_params.get("view", "landing")
 
 if view != "app":
     landing_path = Path(__file__).parent / "landing.html"
     if landing_path.exists():
-        components.html(landing_path.read_text(encoding="utf-8"), height=2700, scrolling=True)
+        # scrolling=False: landing.html resizes its own iframe to fit its
+        # content (see resizeFrame() in landing.html), so the OUTER
+        # Streamlit page is the only scroll container. Two nested
+        # scrollbars fighting each other was what made scrolling feel
+        # janky before. The initial height here is just a placeholder
+        # until the JS resize kicks in a few hundred ms after load.
+        components.html(landing_path.read_text(encoding="utf-8"), height=1400, scrolling=False)
     else:
         st.error("landing.html not found next to app.py — place it in the same folder.")
     st.stop()

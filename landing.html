@@ -269,7 +269,7 @@ footer{ border-top: 3px double var(--rule); padding: 34px 0; }
             <a href="#file">The File</a>
             <a href="#start">Open a Case</a>
         </div>
-        <a class="nav-cta" href="?view=app" target="_top">Open the App →</a>
+        <a class="nav-cta" href="?view=app" onclick="return openApp(event)">Open the App →</a>
     </div>
     <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
 </div>
@@ -299,7 +299,7 @@ footer{ border-top: 3px double var(--rule); padding: 34px 0; }
                 case, live on screen.
             </p>
             <div class="hero-ctas">
-                <a class="btn-primary" href="?view=app" target="_top">Dispatch the Desk →</a>
+                <a class="btn-primary" href="?view=app" onclick="return openApp(event)">Dispatch the Desk →</a>
                 <a class="btn-ghost" href="#desks">See how it works</a>
             </div>
             <div class="hero-meta">
@@ -414,7 +414,7 @@ footer{ border-top: 3px double var(--rule); padding: 34px 0; }
             <div>
                 <h2>Every case gets filed the same way.</h2>
                 <p>THE WIRE stamps, dates, and signs off every report the same way — a Scout's leads, a Reader's detail, a Writer's draft, and an Editor's note, filed together as one document you can read or download.</p>
-                <a class="btn-primary" href="?view=app" target="_top">Open THE WIRE →</a>
+                <a class="btn-primary" href="?view=app" onclick="return openApp(event)">Open THE WIRE →</a>
             </div>
             <div class="case-preview">
                 <div class="cp-stamp">FILED</div>
@@ -436,6 +436,45 @@ footer{ border-top: 3px double var(--rule); padding: 34px 0; }
 </footer>
 
 <script>
+// ---------- open the app (works around Streamlit's iframe sandbox) ----------
+// This page runs inside a sandboxed iframe (Streamlit's components.html).
+// That sandbox does not grant "allow-top-navigation", so a plain
+// <a target="_top"> link is silently blocked by the browser — it's a
+// Streamlit platform limitation, not something fixable from here.
+// Opening a new tab via window.open() uses "allow-popups" instead, which
+// Streamlit's sandbox does grant, so this reliably gets the click through.
+function openApp(e){
+    e.preventDefault();
+    try {
+        var base = window.top.location.href.split('?')[0].split('#')[0];
+        window.open(base + '?view=app', '_blank');
+    } catch (err) {
+        window.open('?view=app', '_blank');
+    }
+    return false;
+}
+
+// ---------- keep this page's own iframe sized to its content ----------
+// Without this, the iframe gets a fixed height from Python and grows its
+// own internal scrollbar on top of the outer Streamlit page's scrollbar —
+// two scrollbars fighting each other feels janky. Resizing the iframe
+// itself to match content height means only the outer page scrolls.
+function resizeFrame(){
+    try {
+        if (window.frameElement) {
+            var h = document.documentElement.scrollHeight;
+            window.frameElement.style.height = h + 'px';
+            window.frameElement.setAttribute('height', h);
+        }
+    } catch (err) { /* not embedded, or cross-origin — ignore */ }
+}
+window.addEventListener('load', resizeFrame);
+window.addEventListener('resize', resizeFrame);
+if (window.ResizeObserver) { new ResizeObserver(resizeFrame).observe(document.body); }
+setTimeout(resizeFrame, 300);
+setTimeout(resizeFrame, 1000);
+setTimeout(resizeFrame, 2200); // after fonts/animations settle
+
 // ---------- scroll reveal ----------
 const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('show'); } });
@@ -443,16 +482,25 @@ const io = new IntersectionObserver((entries) => {
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // ---------- scroll progress rail ----------
+// The outer Streamlit page owns scrolling now (see resizeFrame above),
+// not this document, so read progress from window.top when we can.
 const progressFill = document.getElementById('progressFill');
 function updateProgress(){
-    const h = document.documentElement;
-    const scrolled = h.scrollTop;
-    const height = h.scrollHeight - h.clientHeight;
-    const pct = height > 0 ? (scrolled / height) * 100 : 0;
-    progressFill.style.width = pct + '%';
+    try {
+        const h = window.top.document.documentElement;
+        const scrolled = h.scrollTop;
+        const height = h.scrollHeight - h.clientHeight;
+        const pct = height > 0 ? (scrolled / height) * 100 : 0;
+        progressFill.style.width = pct + '%';
+    } catch (err) {
+        // cross-origin fallback: hide rather than show a stuck bar
+        progressFill.parentElement.style.display = 'none';
+    }
 }
-document.addEventListener('scroll', updateProgress, { passive: true });
+try { window.top.addEventListener('scroll', updateProgress, { passive: true }); }
+catch (err) { document.addEventListener('scroll', updateProgress, { passive: true }); }
 updateProgress();
+setTimeout(updateProgress, 500);
 
 // ---------- demo card parallax tilt ----------
 const demoCard = document.querySelector('.demo-card');
