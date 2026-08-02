@@ -21,7 +21,9 @@ writer_llm = ChatMistralAI(
     model="mistral-small-2506",
     api_key=os.getenv("MISTRAL_API_KEY"),
     temperature=0.3,   # a little room for fuller, less clipped prose than temperature=0
-    max_tokens=4096,
+    max_tokens=8192,   # 4096 was cutting reports off mid-"Analysis & Implications" —
+                        # a full 5-section, 1500-1800 word report with headers/formatting
+                        # needs more headroom than that leaves.
 )
 
 # 1st agent

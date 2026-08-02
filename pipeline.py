@@ -55,6 +55,10 @@ def run_research_pipeline(topic : str) -> dict:
         "research" : research_combined
     })
 
+    if "## Sources" not in state["report"] and "##Sources" not in state["report"]:
+        print("\n[WARNING] Report looks cut off — no Sources section found. "
+              "The topic may be too broad for the current token budget.")
+
     print("\n Final Report\n",state['report'])
 
     #critic report 

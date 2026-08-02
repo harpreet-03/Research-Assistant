@@ -683,7 +683,10 @@ if run_clicked:
             )
             state["report"] = writer_chain.invoke({"topic": topic, "research": research_combined})
             set_status("writer", "done")
-            log("Writer filed the first draft.")
+            if "## Sources" not in state["report"] and "##Sources" not in state["report"]:
+                log("<span style='color:#e08a6d'>Writer filed the draft, but it looks cut off (no Sources section) — the topic may be too broad for the token budget.</span>")
+            else:
+                log("Writer filed the first draft.")
             refresh()
 
             # ---- EDITOR (critic) --------------------------------
