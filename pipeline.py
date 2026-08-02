@@ -26,7 +26,11 @@ def run_research_pipeline(topic : str) -> dict:
     reader_result = reader_agent.invoke({
         "messages": [("user",
             f"Based on the following search results about '{topic}', "
-            f"pick the most relevant URL and scrape it for deeper content.\n\n"
+            f"pick the 3 most relevant and diverse URLs (avoid picking near-duplicate "
+            f"sources) and scrape each one using the scrape_url tool — call the tool "
+            f"once per URL. Then return the combined findings, clearly labeled with "
+            f"'Source: <url>' above each URL's content, so it's obvious which fact came "
+            f"from which source.\n\n"
             f"Search Results:\n{state['search_results'][:2500]}"
         )]
     })
